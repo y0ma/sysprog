@@ -1,0 +1,7 @@
+A[n x p]; B[p x q]
+input [n], [p] and [q]:
+input matrix A[3 x 3]:
+input matrix B[3 x 3]:
+  13  -24  -10 
+  -9   -5   -9 
+ -11   45  -15 
