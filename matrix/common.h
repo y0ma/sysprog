@@ -1,3 +1,7 @@
+#ifndef COMMON_FILE
+
+#define COMMON_FILE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -20,3 +24,5 @@ typedef struct matrix_tag {
   int cols;
   int *body;
 } matrix;
+
+#endif
