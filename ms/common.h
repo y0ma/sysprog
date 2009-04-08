@@ -1,3 +1,7 @@
+#ifndef COMMON_FILE
+
+#define COMMON_FILE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -18,3 +22,5 @@ typedef struct mystruct_tag {
   int b;
   int c;
 } mystruct;
+
+#endif
