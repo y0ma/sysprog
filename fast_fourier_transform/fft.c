@@ -4,6 +4,8 @@
 
 #define MY_MAX2(a, b) ((a) > (b) ? (a) : (b))
 #define MY_PI (3.14159265358979323846)
+#define FORWARD (1)
+#define BACKWARD (-1)
 
 struct complex_num {
   double re;
@@ -11,19 +13,31 @@ struct complex_num {
 };
 
 int round2(int n);
-struct complex_num* fft(struct complex_num *a, struct complex_num *y, int n);
+struct complex_num* fft(struct complex_num *a, struct complex_num *y, int n, int direction);
+struct complex_num* forward_fft(struct complex_num *a, struct complex_num *y, int n);
+struct complex_num* backward_fft(struct complex_num *y, struct complex_num *a, int n);
 struct complex_num* complex_add(struct complex_num *a, struct complex_num *b, struct complex_num *res);
 struct complex_num* complex_sub(struct complex_num *a, struct complex_num *b, struct complex_num *res);
 struct complex_num* complex_mul(struct complex_num *a, struct complex_num *b, struct complex_num *res);
 
 int main(void) {
-  int deg[2], deg2;
+  int deg[3], deg2;
   struct complex_num *polynomials[3];
   struct complex_num *dft[3]; //Discrete Fourier Transform
   int i, j;
 
+  printf("Введите степень 1-го многочлена:\n");
   scanf("%d", &deg[0]);
+  
+  printf("Введите степень 2-го многочлена:\n");
   scanf("%d", &deg[1]);
+
+  if(deg[0] <= 0 || deg[1] <= 0) {
+    printf("Некорректные данные\n");
+    return 1;
+  }
+
+  deg[2] = deg[0] + deg[1] - 1;
 
   deg2 = 2 * round2(MY_MAX2(deg[0], deg[1]));
   
@@ -33,15 +47,28 @@ int main(void) {
   }
 
   for(i = 0; i < 2; ++i) {
+    printf("Введите коэффициенты %d-го многочлена (в порядке возрастания степеней):\n", i+1);
     for(j = 0; j < deg[i]; ++j) {
       scanf("%lf", &polynomials[i][j].re);
     }
   }
  
   for(i = 0; i < 2; ++i) {
-    fft(polynomials[i], dft[i], deg2);   
+    forward_fft(polynomials[i], dft[i], deg2);
   }
 
+  for(i = 0; i < deg2; ++i) {
+    complex_mul(&dft[0][i], &dft[1][i], &dft[2][i]);
+  }
+  
+  backward_fft(dft[2], polynomials[2], deg2);
+
+  printf("\nРезультат:\n");
+  for(i = 0; i < deg[2]; ++i) {
+    printf("(%lf, %lf) ", polynomials[2][i].re, polynomials[2][i].im);
+  }
+  printf("\n");
+  
   for(i = 0; i < 3; ++i) {
     free(polynomials[i]);
     free(dft[i]);
@@ -79,7 +106,24 @@ int round2(int n) {
   return (1 << shift);
 }
 
-struct complex_num* fft(struct complex_num *a, struct complex_num *y, int n) {
+struct complex_num* forward_fft(struct complex_num *a, struct complex_num *y, int n) {
+  return fft(a, y, n, FORWARD);
+}
+
+struct complex_num* backward_fft(struct complex_num *y, struct complex_num *a, int n) {
+  int i;
+  
+  fft(y, a, n, BACKWARD);
+
+  for(i = 0; i < n; ++i) {
+    a[i].re /= n;
+    a[i].im /= n;
+  }
+
+  return a;
+}
+
+struct complex_num* fft(struct complex_num *a, struct complex_num *y, int n, int direction) {
   struct complex_num w, wn;
   struct complex_num *_a[2], *_y[2];
   double alpha;
@@ -95,7 +139,7 @@ struct complex_num* fft(struct complex_num *a, struct complex_num *y, int n) {
   w = (struct complex_num) {1, 0};
   
   alpha = 2*MY_PI/n;
-  wn = (struct complex_num) {cos(alpha), sin(alpha)};
+  wn = (struct complex_num) {cos(alpha), sin(alpha) * direction};
   
   for(i = 0; i < 2; ++i) {
     _a[i] = (struct complex_num*) calloc(nn, sizeof(struct complex_num));
@@ -105,7 +149,7 @@ struct complex_num* fft(struct complex_num *a, struct complex_num *y, int n) {
       _a[i][j] = a[2*j + i];
     }
     
-    _y[i] = fft(_a[i], _y[i], nn);
+    _y[i] = fft(_a[i], _y[i], nn, direction);
   }
 
   for(i = 0; i < nn; ++i) {
