@@ -1,11 +1,14 @@
 #ifndef __RSA_HEADERS__
 #define __RSA_HEADERS__
 
-struct rsa_public_key {
-  long long key;
-  long long n;
+#define FALSE (0)
+#define TRUE  (1)
+
+struct rsa_key {
+  unsigned long key;
+  unsigned long n;
 };
 
-void gen_key(struct rsa_key *public_key, struct rsa_key *private_key);
+extern void gen_key(struct rsa_key *public_key, struct rsa_key *private_key);
 
 #endif /* __RSA_HEADERS__ */
