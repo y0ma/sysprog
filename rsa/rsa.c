@@ -1,14 +1,10 @@
 #include <stdlib.h>
 #include <time.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <fcntl.h>
 #include <stdio.h>
 
 #include "rsa.h"
 
-#define RSA_S (100)
+#define RSA_S (100) //Number of Miller-Rabin's tests
 
 void rsa_generate_keys(struct rsa_key**, struct rsa_key**);
 unsigned short rsa_get_prime();
@@ -25,8 +21,6 @@ void rsa_generate_keys(struct rsa_key **public_key, struct rsa_key **private_key
   
   *public_key = (struct rsa_key*) calloc(1, sizeof(struct rsa_key));
   *private_key = (struct rsa_key*) calloc(1, sizeof(struct rsa_key));
-
-  //printf("here 1\n");
 
   srand(time(NULL));
   
@@ -173,3 +167,4 @@ long rsa_ext_gcd(unsigned long a, unsigned long b, long *x, long *y, long *d) {
   
   return *d;
 }
+
