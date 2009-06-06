@@ -17,7 +17,7 @@ unsigned long rsa_exp(unsigned long, unsigned long, unsigned long);
 int rsa_witness(unsigned short, unsigned short);
 int rsa_miller_rabin(unsigned short, int);
 unsigned long rsa_phi(unsigned short, unsigned short);
-long rsa_ext_gcd(long, long, long*, long*, long*);
+long rsa_ext_gcd(unsigned long, unsigned long, long*, long*, long*);
 
 void rsa_generate_keys(struct rsa_key **public_key, struct rsa_key **private_key) {
   unsigned short p, q;
@@ -33,8 +33,8 @@ void rsa_generate_keys(struct rsa_key **public_key, struct rsa_key **private_key
   p = rsa_get_prime();
   q = rsa_get_prime();
 
-  printf("prime 1: %d\n", p);
-  printf("prime 2: %d\n", q); 
+  //printf("prime 1: %d\n", p);
+  //printf("prime 2: %d\n", q); 
 
   n = (unsigned long) p * q;
 
@@ -77,11 +77,12 @@ void rsa_get_keys(unsigned long *e, unsigned long *d, unsigned long n, unsigned 
       break;
     }
   }
-
-  *d = x;
-  if(*d <= 0) {
-    *d += phi;
+  
+  if(x < 0) {
+  	x += phi;	
   }
+  
+  *d = x;
 }
 
 unsigned long rsa_exp(unsigned long a, unsigned long b, unsigned long n) {
@@ -155,7 +156,7 @@ unsigned long rsa_phi(unsigned short p, unsigned short q) {
   return (unsigned long) (p - 1) * (q - 1);
 }
 
-long rsa_ext_gcd(long a, long b, long *x, long *y, long *d) {
+long rsa_ext_gcd(unsigned long a, unsigned long b, long *x, long *y, long *d) {
   long tmp;
   
   if(!b) {
