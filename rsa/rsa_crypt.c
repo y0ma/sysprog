@@ -8,8 +8,8 @@
 #include "rsa.h"
 
 
-#define CODE ('c')
-#define DECODE ('d')
+#define CODE_CMD ('c')
+#define DECODE_CMD ('d')
 
 #define RSA_KEYS_FILE ("rsa.keys")
 
@@ -44,11 +44,19 @@ void read_keys(FILE *keysfd, struct rsa_key *public_key, struct rsa_key *private
 }
 
 void code(int srcfd, int destfd, struct rsa_key *public_key) {
-  printf("public_key: %lu\n", public_key->key);
+  unsigned long buf;
+  
+  for(buf = 0; read(srcfd, &buf, 1) > 0; buf = 0) {
+  	printf("%ld\n", buf);
+  }
 }
 
 void decode(int srcfd, int destfd, struct rsa_key *private_key) {
-  printf("private_key: %lu\n", private_key->key);
+  unsigned long buf;
+  
+  for(buf = 0; read(srcfd, &buf, 1) > 0; buf = 0) {
+  	printf("%ld\n", buf);
+  }
 }
 
 int main(int argc, char **argv) {
@@ -88,9 +96,9 @@ int main(int argc, char **argv) {
 
   cmd = argv[1];
   
-  if(*cmd == CODE) {
+  if(*cmd == CODE_CMD) {
     code(srcfd, destfd, public_key);
-  } else if(*cmd == DECODE) {
+  } else if(*cmd == DECODE_CMD) {
     decode(srcfd, destfd, private_key);
   } else {
     fprintf(stderr, "unknow command '%s'\n", cmd);
