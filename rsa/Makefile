@@ -1,4 +1,4 @@
-CC = gcc -Wall -std=c99
+CC = gcc -Wall
 
 RSA_KEYGEN_NAME = "keygen"
 RSA_CRYPT_NAME = "crypt"

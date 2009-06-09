@@ -7,6 +7,7 @@
 #define RSA_S (100) //Number of Miller-Rabin's tests
 
 void rsa_generate_keys(struct rsa_key**, struct rsa_key**);
+unsigned long rsa_convert(unsigned long, struct rsa_key*);
 unsigned short rsa_get_prime();
 void rsa_get_keys(unsigned long*, unsigned long*, unsigned long, unsigned long);
 unsigned long rsa_exp(unsigned long, unsigned long, unsigned long);
@@ -14,6 +15,7 @@ int rsa_witness(unsigned short, unsigned short);
 int rsa_miller_rabin(unsigned short, int);
 unsigned long rsa_phi(unsigned short, unsigned short);
 long rsa_ext_gcd(unsigned long, unsigned long, long*, long*, long*);
+
 
 void rsa_generate_keys(struct rsa_key **public_key, struct rsa_key **private_key) {
   unsigned short p, q;
@@ -41,6 +43,10 @@ void rsa_generate_keys(struct rsa_key **public_key, struct rsa_key **private_key
   
   (*public_key)->key = e;
   (*public_key)->n = n;
+}
+
+unsigned long rsa_convert(unsigned long msg, struct rsa_key *key) {
+  return rsa_exp(msg, key->key, key->n);
 }
 
 unsigned short rsa_get_prime() {
