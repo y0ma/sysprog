@@ -11,7 +11,5 @@ struct rsa_key {
 
 extern void rsa_generate_keys(struct rsa_key **public_key, struct rsa_key **private_key);
 extern unsigned long rsa_convert(unsigned long msg, struct rsa_key* key);
-
-//extern unsigned long rsa_exp(unsigned long, unsigned long, unsigned long);
   
 #endif /* __RSA_HEADERS__ */
