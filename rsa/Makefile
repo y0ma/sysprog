@@ -26,5 +26,5 @@ clean:
 	rm -rf *~ *.o
 
 git_clean: clean
-	rm -rf $(RSA_KEYGEN_NAME) $(RSA_KEYS_NAME) $(RSA_CRYPT_NAME)
+	git rm -rf $(RSA_KEYGEN_NAME) $(RSA_KEYS_NAME) $(RSA_CRYPT_NAME)
 

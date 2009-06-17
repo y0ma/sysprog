@@ -10,7 +10,7 @@ default: compile clean
 compile: compile_shm_malloc
 
 compile_shm_malloc: $(LIBOBJ) $(MAINOBJ)
-	$(CC) $(LIBOBJ) $(MAINOBJ) -o $(SHM_MALLOC_NAME)
+	$(CC) $(CFLAGS) $(LIBOBJ) $(MAINOBJ) -o $(SHM_MALLOC_NAME)
 
 .c.o:
 	$(CC) -c $< -o $@
@@ -19,4 +19,5 @@ clean:
 	rm -rf *~ *.o
 
 git_clean: clean
-	rm -rf $(SHM_MALLOC_NAME)
+	rm $(SHM_MALLOC_NAME)
+
