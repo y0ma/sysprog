@@ -32,7 +32,7 @@ void usage(char *name, int exitcode) {
 void read_keys(FILE *keysfd, struct rsa_key *public_key, struct rsa_key *private_key) {
   unsigned long s, e, n;
 
-  fscanf(keysfd, "s:%lu\n", &s);
+  fscanf(keysfd, "d:%lu\n", &s);
   fscanf(keysfd, "e:%lu\n", &e);
   fscanf(keysfd, "n:%lu\n", &n);
 

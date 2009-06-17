@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
   
   rsa_generate_keys(&public_key, &private_key);
 
-  fprintf(fd, "s:%lu\n", private_key->key);
+  fprintf(fd, "d:%lu\n", private_key->key);
   fprintf(fd, "e:%lu\n", public_key->key);
   fprintf(fd, "n:%lu\n", public_key->n);
    

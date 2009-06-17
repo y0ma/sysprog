@@ -28,4 +28,3 @@ clean:
 git_clean: clean
 	rm -rf $(RSA_KEYGEN_NAME) $(RSA_KEYS_NAME) $(RSA_CRYPT_NAME)
 
-
