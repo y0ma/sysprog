@@ -1,12 +1,7 @@
 #ifndef __X_SYSCALLS__
 #define __X_SYSCALLS__
 
-#include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <sys/types.h>
-#include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/shm.h>
 
@@ -15,6 +10,7 @@
 extern void *x_malloc(size_t);
 
 extern pid_t x_fork();
+extern pid_t x_wait(int*);
 
 extern key_t x_ftok(const char*, int);
 

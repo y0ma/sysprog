@@ -1,5 +1,15 @@
 #include "x_syscalls.h"
 
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
+#include <sys/shm.h>
+#include <sys/wait.h>
+
 // declaration
 
 void x_error(const char*);
@@ -7,6 +17,7 @@ void x_error(const char*);
 void *x_malloc(size_t);
 
 pid_t x_fork();
+pid_t x_wait(int*);
 
 key_t x_ftok(const char*, int);
 
@@ -38,6 +49,17 @@ pid_t x_fork() {
   pid = fork();
   if(pid < 0) {
     x_error("can't fork");
+  }
+
+  return pid;
+}
+
+pid_t x_wait(int *status) {
+  pid_t pid;
+
+  pid = wait(status);
+  if(pid < 0) {
+    x_error("can't perform wait");
   }
 
   return pid;
