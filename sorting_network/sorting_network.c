@@ -9,16 +9,18 @@
 
 #define ISCHILD(pid) ((pid) == 0)
 
-#define PROJ_ID (100)
+#define SEM_PROJ_ID (20)
+#define SHM_PROJ_ID (30)
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-int array_shmid, schedule_shmid, semid;
+int shmid, semid;
+void *shmaddr;
 int *array, *schedule;
-int a_size;
+int a_size, cascades;
 
-struct sembuf swait = {0, 0, 0};
-struct sembuf dec = {0, -1, 0};
+struct sembuf swait[2] = {{0, 0, 0}, {1, 0, 0}};
+struct sembuf dec[2] = {{0, -1, 0}, {1, -1, 0}};
 
 void sn_init();
 int sn_log2(int);
@@ -31,22 +33,28 @@ void hc(int, int, int);
 
 void sn_init() {
   key_t key;
-  int proj_id;
   int k;
+  int shm_size;
 
   k = sn_log2(a_size);
-  proj_id = PROJ_ID;
+  cascades = k*(k + 1)/2;
 
-  key = x_ftok(".", proj_id++);
-  array_shmid = x_shmget(key, a_size*sizeof(int), IPC_CREAT | IPC_EXCL | 0600);
-  array = (int*) x_shmat(array_shmid, NULL, 0);
+  key = x_ftok(".", SEM_PROJ_ID);
+  semid = x_semget(key, 2, IPC_CREAT | IPC_EXCL | 0600);
 
-  key = x_ftok(".", proj_id++);
-  schedule_shmid = x_shmget(key, (k*(k + 1)/2)*a_size*sizeof(int), IPC_CREAT | IPC_EXCL | 0600);
-  schedule = (int*) x_shmat(schedule_shmid, NULL, 0);
+  shm_size = a_size + cascades*a_size;
+  key = x_ftok(".", SHM_PROJ_ID);
+  shmid = x_shmget(key, shm_size*sizeof(int), IPC_CREAT | IPC_EXCL | 0600);
+  shmaddr = x_shmat(shmid, NULL, 0);
 
-  key = x_ftok(".", proj_id);
-  semid = x_semget(key, 1, IPC_CREAT | IPC_EXCL | 0600);
+  array = (int*) shmaddr;
+  schedule = (int*) shmaddr + a_size;
+}
+
+void clean(int sig) {
+  x_shmdt(shmaddr);
+  x_shmctl(shmid, IPC_RMID, NULL);
+  x_semctl(semid, 0, IPC_RMID);
 }
 
 int sn_log2(int n) {
@@ -76,12 +84,9 @@ int round2(int n) {
 }
 
 void print_schedule() {
-  int i, j, k, *row;
-  
-  k = sn_log2(a_size);
-  k = k*(k + 1)/2;
+  int i, j, *row;
 
-  for(i = 0; i < k; i++) {
+  for(i = 0; i < cascades; i++) {
     row = schedule + i*a_size;
     for(j = 0; j < a_size; j++) {
       printf("%d ", row[j]);
@@ -150,41 +155,76 @@ void hc(int cascade, int start, int n) {
   }
 }
 
-void build_schedule(int *schedule, int a_size) {
+void build_schedule() {
   sn(0, a_size);
 }
 
 void sigchld_handler(int sig) {
-  while(waitpid(-1, NULL, WNOHANG) > 0) {
-    printf("sigchld\n");
-  };
+  while(waitpid(-1, NULL, WNOHANG) > 0);
+}
+
+void run_comparator(int i, int cascades) {
+  int j, tmp;
+  int *wires;
+
+  wires = schedule + 2*i;
+
+  for(j = 0; j < cascades; j++) {
+    while(semop(semid, &swait[(j + 1)%2], 1) < 0);
+
+    if(array[wires[0]] > array[wires[1]]) {
+      tmp = array[wires[0]];
+      array[wires[0]] = array[wires[1]];
+      array[wires[1]] = tmp;
+    }
+
+    while(semop(semid, &dec[j%2], 1) < 0);
+
+    wires += a_size;
+  }
 }
 
 void run() {
   pid_t pid;
   int i;
-  struct sembuf inc = {0, a_size/2, 0};
+  struct sembuf inc[2] = {{0, a_size/2, 0}, {1, a_size/2, 0}};
   
-  semop(semid, &inc, 1);
+  while(semop(semid, &inc[0], 1) < 0);
+
   for(i = 0; i < a_size/2; i++) {
     pid = x_fork();
+
     if(ISCHILD(pid)) {
-      sleep(4*i);
-      semop(semid, &dec, 1);
-      printf("ready\n");
+      run_comparator(i, cascades);
       exit(0);
     }
   }
-  while(semop(semid, &swait, 1) < 0);
+
+  i = 0;
+  while(13) {
+    while(semop(semid, &swait[i%2], 1) < 0);
+    while(semop(semid, &inc[(i + 1)%2], 1) < 0);
+    
+    i++;
+    if(cascades == i) {
+      break;
+    }
+  }
 }
 
-int main() {
+int main(int argc, char **argv) {
   int a_origin_size;
   int i, max;
 
   signal(SIGCHLD, sigchld_handler);
+  signal(SIGTERM, clean);
+  signal(SIGQUIT, clean);
   
-  printf("введите количество элементов в массиве: ");
+  if(argc == 1) {
+    printf("введите количество элементов в массиве: ");
+    fflush(stdout);
+  }
+  
   scanf("%d", &a_origin_size);
 
   if(a_origin_size <= 0) {
@@ -192,8 +232,6 @@ int main() {
   }
   
   a_size = round2(a_origin_size);
-  
-  //printf("a_size: %d\n", a_size);
 
   sn_init();
 
@@ -203,13 +241,17 @@ int main() {
   }
   for(; i < a_size; array[i++] = max);
   
-  build_schedule(schedule, a_size);
-  //print_schedule(schedule, a_size);
+  if(a_origin_size > 1) {
+    build_schedule();
+    //print_schedule();
 
-  run();
+    run();
+  }
 
   for(i = 0; i < a_origin_size; printf("%d ", array[i++]));
   printf("\n");
+
+  clean(0);
   
   return 0;
 }
