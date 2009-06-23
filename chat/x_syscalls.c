@@ -8,6 +8,7 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/shm.h>
+#include <sys/msg.h>
 #include <sys/wait.h>
 
 // declaration
@@ -16,8 +17,10 @@ void x_error(const char*);
 
 void *x_malloc(size_t);
 
-pid_t x_fork();
+pid_t x_fork(void);
 pid_t x_wait(int*);
+pid_t x_getpid(void);
+pid_t x_getppid(void);
 
 key_t x_ftok(const char*, int);
 
@@ -29,6 +32,11 @@ int x_shmget(key_t, size_t, int);
 void x_shmctl(int, int, struct shmid_ds*);
 void *x_shmat(int, const void*, int);
 void x_shmdt(const void*);
+
+int x_msgget(key_t, int);
+void x_msgctl(int, int, struct msqid_ds*);
+void x_msgsnd(int, const void*, size_t, int);
+void x_msgrcv(int, void*, size_t, long, int);
 
 // implementation
 
@@ -43,7 +51,7 @@ void *x_malloc(size_t size) {
   return ptr;
 }
 
-pid_t x_fork() {
+pid_t x_fork(void) {
   pid_t pid;
 
   pid = fork();
@@ -62,6 +70,28 @@ pid_t x_wait(int *status) {
     x_error("can't perform wait");
   }
 
+  return pid;
+}
+
+pid_t x_getpid(void) {
+  pid_t pid;
+
+  pid = getpid();
+  if(pid < 0) {
+    x_error("can't get a process identifier");
+  }
+  
+  return pid;
+}
+
+pid_t x_getppid(void) {
+  pid_t pid;
+
+  pid = getppid();
+  if(pid < 0) {
+    x_error("can't get a process identifier");
+  }
+  
   return pid;
 }
 
@@ -156,6 +186,52 @@ void x_shmdt(const void *shmaddr) {
     x_error("can't detach the shared memory segment");
   }
 }
+
+int x_msgget(key_t key, int msgflg) {
+  int msqid;
+
+  msqid = msgget(key, msgflg);
+  if(msqid < 0) {
+    if(errno == EEXIST) {
+      msqid = x_msgget(key, 0);
+      x_msgctl(msqid, IPC_RMID, NULL);
+      msqid = x_msgget(key, msgflg);
+    } else {
+      x_error("can't get a message queue identifier");
+    }
+  }
+  
+  return msqid;
+}
+
+void x_msgctl(int msqid, int cmd, struct msqid_ds *buf) {
+  int retval;
+
+  retval = msgctl(msqid, cmd, buf);
+  if(retval < 0) {
+    x_error("can't control message queue");
+  }
+}
+
+void x_msgsnd(int msqid, const void *msgp, size_t msgsz, int msgflg) {
+  int retval;
+
+  retval = msgsnd(msqid, msgp, msgsz, msgflg);
+  if(retval < 0) {
+    x_error("can't send message");
+  }
+}
+
+void x_msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp,
+	     int msgflg) {
+  int retval;
+  
+  retval = msgrcv(msqid, msgp, msgsz, msgtyp, msgflg);
+  if(retval < 0) {
+    x_error("can't recieve message");
+  }
+}
+
 
 void x_error(const char *message) {
   perror(message);
