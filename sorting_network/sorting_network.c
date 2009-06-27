@@ -170,7 +170,7 @@ void run_comparator(int i, int cascades) {
   wires = schedule + 2*i;
 
   for(j = 0; j < cascades; j++) {
-    while(semop(semid, &swait[(j + 1)%2], 1) < 0);
+    x_semop(semid, &swait[(j + 1)%2], 1);
 
     if(array[wires[0]] > array[wires[1]]) {
       tmp = array[wires[0]];
@@ -178,7 +178,7 @@ void run_comparator(int i, int cascades) {
       array[wires[1]] = tmp;
     }
 
-    while(semop(semid, &dec[j%2], 1) < 0);
+    x_semop(semid, &dec[j%2], 1);
 
     wires += a_size;
   }
@@ -189,7 +189,7 @@ void run() {
   int i;
   struct sembuf inc[2] = {{0, a_size/2, 0}, {1, a_size/2, 0}};
   
-  while(semop(semid, &inc[0], 1) < 0);
+  x_semop(semid, &inc[0], 1);
 
   for(i = 0; i < a_size/2; i++) {
     pid = x_fork();
@@ -202,8 +202,8 @@ void run() {
 
   i = 0;
   while(13) {
-    while(semop(semid, &swait[i%2], 1) < 0);
-    while(semop(semid, &inc[(i + 1)%2], 1) < 0);
+    x_semop(semid, &swait[i%2], 1);
+    x_semop(semid, &inc[(i + 1)%2], 1);
     
     i++;
     if(cascades == i) {
