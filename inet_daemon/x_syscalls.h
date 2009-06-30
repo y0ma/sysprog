@@ -7,10 +7,19 @@
 
 #define X_ERROR_EXIT (-1)
 
+#define IS_CHILD(pid) ((pid) == 0)
+
+extern void x_error(const char*);
+
 extern void *x_malloc(size_t);
+
+extern void x_chdir(const char*);
 
 extern pid_t x_fork();
 extern pid_t x_wait(int*);
+extern pid_t x_getpid();
+extern pid_t x_getppid();
+extern void x_setpgrp();
 
 extern key_t x_ftok(const char*, int);
 

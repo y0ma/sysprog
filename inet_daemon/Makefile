@@ -2,14 +2,14 @@ CC = gcc -Wall
 
 INETDAEMON_NAME = "inetd"
 
-MAINOBJ = inet_daemon.o
-LIBOBJ = x_syscalls.o
+MAINOBJ = daemon.o
+LIBOBJ = x_syscalls.o inetd.o
 
 default: compile
 
-compile: compile_inet_daemon
+compile: compile_inetd
 
-compile_inet_daemon: $(LIBOBJ) $(MAINOBJ)
+compile_inetd: $(LIBOBJ) $(MAINOBJ)
 	$(CC) $(CFLAGS) $(LIBOBJ) $(MAINOBJ) -o $(INETDAEMON_NAME)
 
 .c.o:

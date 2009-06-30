@@ -16,8 +16,13 @@ void x_error(const char*);
 
 void *x_malloc(size_t);
 
+void x_chdir(const char*);
+
 pid_t x_fork();
 pid_t x_wait(int*);
+pid_t x_getpid(void);
+pid_t x_getppid(void);
+void x_setpgrp(void);
 
 key_t x_ftok(const char*, int);
 
@@ -43,6 +48,15 @@ void *x_malloc(size_t size) {
   return ptr;
 }
 
+void x_chdir(const char *path) {
+  int retval;
+
+  retval = chdir(path);
+  if(retval < 0) {
+    x_error("can't change dir");
+  }
+}
+
 pid_t x_fork() {
   pid_t pid;
 
@@ -63,6 +77,37 @@ pid_t x_wait(int *status) {
   }
 
   return pid;
+}
+
+pid_t x_getpid(void) {
+  pid_t pid;
+
+  pid = getpid();
+  if(pid < 0) {
+    x_error("can't get a process identifier");
+  }
+  
+  return pid;
+}
+
+pid_t x_getppid(void) {
+  pid_t pid;
+
+  pid = getppid();
+  if(pid < 0) {
+    x_error("can't get a process identifier");
+  }
+  
+  return pid;
+}
+
+void x_setpgrp(void) {
+  int retval;
+
+  retval = setpgrp();
+  if(retval < 0) {
+    x_error("can't set PGID");
+  }
 }
 
 key_t x_ftok(const char *pathname, int proj_id) {
